@@ -1,0 +1,98 @@
+version: '3.7'
+
+services:
+  gateway:
+    container_name: microservice-gateway
+    image: microservice/gateway:latest
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    env_file: 
+      - .env
+    ports:
+      - 80:3000
+    depends_on:
+      - database
+      - rabbitmq
+    restart: always
+    networks:
+      - microservices-superflights
+
+  users:
+    container_name: microservice-users
+    image: microservice/users:latest
+    build:
+      context: ./api-users
+      dockerfile: Dockerfile
+    env_file: 
+      - .env
+    depends_on:
+      - database
+      - rabbitmq
+    restart: always
+    networks:
+      - microservices-superflights
+
+  passengers:
+    container_name: microservice-passengers
+    image: microservice/passengers:latest
+    build:
+      context: ./api-passengers
+      dockerfile: Dockerfile
+    env_file: 
+      - .env
+    depends_on:
+      - database
+      - rabbitmq
+    restart: always
+    networks:
+      - microservices-superflights
+
+  flights:
+    container_name: microservice-flights
+    image: microservice/flights:latest
+    build:
+      context: ./api-flights
+      dockerfile: Dockerfile
+    env_file: 
+      - .env
+    depends_on:
+      - database
+      - rabbitmq
+    restart: always
+    networks:
+      - microservices-superflights
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    expose:
+      - 5672
+      - 15672
+    restart: always
+    networks:
+      - microservices-superflights
+    
+  database:
+    container_name: database
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: admin
+      MONGO_DATA_DIR: /data/db
+      MONGO_LOG_DIR: /dev/null
+    volumes:
+      - ./mongo/db:/data/db
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - 27017:27017
+    expose:
+      - 27017
+    networks:
+      - microservices-superflights
+
+networks:
+  microservices-superflights:
+    name: microservices-superflights
